@@ -8,11 +8,15 @@ package org.example.demo.model;
 // id : 用來唯一識別特定的一種咖啡。
 // name : 以名稱描述咖啡。
 
+// https://ithelp.ithome.com.tw/articles/10309099
+// 在 Spring boot 開發中使用 H2 Database
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -20,7 +24,8 @@ import java.util.UUID;
  * Coffee 模型類
  * 代表一種咖啡產品，包含唯一識別碼和名稱
  */
-@Data                   // Data：自動生成所有字段的 getter、setter 方法，以及 toString()、equals() 和 hashCode() 方法。
+@Getter
+@Setter
 @AllArgsConstructor     // AllArgsConstructor：生成包含所有字段的參數化構造函數。
 @NoArgsConstructor      // @NoArgsConstructor：生成無參構造函數。
 @Entity
@@ -46,6 +51,11 @@ public class Coffee
 
 /*
 
+JPA Entity 不應該用 lobmok 的 @Data
+
+主要是 @Data 包含了 @EqualsAndHashCode 與 @ToString 這個功能, 分別會去實作 Java Class 的 equals, hashCode, toString 方法。
+這會有什麼影響呢? 可以思考一下, JPA 的 Entity 本身就有 @Id field 可以做 equals 的比較了, 真的還需要去覆寫 equals(Object o) 這個方法嗎？
+其二, 當資料庫有關聯時, 比如說 @OneToMany 時, lombok 因為會自動掃描所有 fields 去產生 hashCode() 與 toString() 而破壞了 lazy loadding 機制, 這不就失去 lazy loadding 的用意了嗎？故 非常不建議 在 Entity 使用 lombok 的 @Data。
 
 ========================================================
 
