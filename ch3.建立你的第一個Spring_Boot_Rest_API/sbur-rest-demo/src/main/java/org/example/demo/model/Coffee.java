@@ -42,6 +42,16 @@ public class Coffee
     }
 
     /**
+     * 預設建構函數 - 用於創建空的 Coffee 實例
+     * 這個建構函數通常用於 JSON 反序列化，
+     */
+    public Coffee()
+    {
+        // 因為 id 是 final 的，所以在這裡也需要初始化它。
+        this.id = UUID.randomUUID().toString(); // 自動生成一個唯一識別碼
+    }
+
+    /**
      * 取得咖啡的唯一識別碼
      * @return 咖啡的 ID
      */
@@ -69,3 +79,26 @@ public class Coffee
     }
 
 }
+
+
+
+/*
+
+ 書裡的範例中使用 pipe (<) 來處理 POST 作業。但一直試不成功。
+ 底下是使用 GitHub Copilot 幫忙的程式碼。
+
+ 加入 `Coffee()` 無參數建構子可以解決 JSON 傳入的問題，原因是像 Spring Boot 使用的 Jackson 序列化/反序列化庫需要一個無參數建構子來建立物件。以下是原因：
+
+ 1. **Jackson 的反序列化需求**：
+   Jackson 在反序列化 JSON 時，會使用反射來創建 Java 類的實例。如果類中沒有無參數建構子，Jackson 無法正確地創建物件，導致反序列化失敗。
+
+ 2. **初始化物件**：
+   無參數建構子確保物件在創建時被正確初始化，即使 JSON 中未提供某些字段的值。例如，`Coffee()` 建構子中初始化了 `id` 字段，確保物件在反序列化後是有效的。
+
+ Adding the `Coffee()` constructor allows the JSON deserialization process to work correctly. When a JSON object is sent to the server, frameworks like Spring Boot use libraries such as Jackson to map the JSON data to a Java object. Jackson requires a no-argument constructor to create an instance of the object before populating its fields.
+
+ Without the no-argument constructor, Jackson cannot instantiate the `Coffee` class, resulting in errors during the deserialization process.
+
+========================================================
+
+ */
