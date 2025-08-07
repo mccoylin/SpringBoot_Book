@@ -152,6 +152,43 @@ public class RestApiDemoController
         coffees.removeIf( c -> c.getId().equals(id));
     }
 
+    /**
+     * 根據名稱獲取特定咖啡的端點
+     * @param name 咖啡的名稱
+     * @return 如果找到匹配的咖啡，返回包含該咖啡的 Optional；否則返回空的 Optional
+     */
+    @GetMapping("/coffees/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
+    Optional<Coffee> getCoffeeByName(@PathVariable String name)     // @PathVariable 從 URL 路徑中提取 id 參數
+    {
+        // 遍歷咖啡列表，查找匹配的 Name
+        // 如果找到，返回該咖啡的 Optional；否則返回空的
+
+        for (Coffee coffee : coffees)
+        {
+            if (coffee.getName().equals(name))
+            {
+                return Optional.of(coffee);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    // 傳來的 json 是很多 Coffee 物件的集合
+    /**
+     * 根據名稱獲取特定咖啡的端點
+     * @param coffees 要新增的咖啡對象集合
+     * @return 返回新增的咖啡對象集合
+     *
+     */
+    @PostMapping("/coffees/batch")
+    List<Coffee> postCoffees(@RequestBody List<Coffee> coffees)
+    {
+        // 將新咖啡添加到列表中
+        this.coffees.addAll(coffees);
+        return coffees; // 返回新增的咖啡對象集合
+    }
+
 }
 
 
