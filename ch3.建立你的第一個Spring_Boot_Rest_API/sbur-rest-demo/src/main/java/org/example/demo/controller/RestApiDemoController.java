@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.Parameter; // 用於描述方法參數的 Swagger 註解
+import io.swagger.v3.oas.annotations.media.ExampleObject; // 用於提供參數範例的 Swagger 註解
 
 
 import java.util.ArrayList;
@@ -84,7 +86,9 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
     })
     @GetMapping("/coffees/{id}")        // 映射 HTTP GET 請求到 /coffees/{id} 路徑，{id} 是路徑變量
-    Optional<Coffee> getCoffeeById(@PathVariable String id)     // @PathVariable 從 URL 路徑中提取 id 參數
+    Optional<Coffee> getCoffeeById(
+            @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true) // Swagger 註解，描述此參數
+            @PathVariable String id)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
         // 遍歷咖啡列表，查找匹配的 ID
         // 如果找到，返回該咖啡的 Optional；否則返回空的
@@ -107,11 +111,13 @@ public class RestApiDemoController
      */
     @Operation(summary = "新增一組咖啡", description = "將新的咖啡對象添加到列表中") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "201", description = "成功新增咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
     @PostMapping("/coffees")
-    Coffee postCoffee(@RequestBody Coffee coffee)
+    Coffee postCoffee(
+            @Parameter(description = "要新增的咖啡對象", examples = { @ExampleObject( name = "拿鐵咖啡", value = "{\"name\" : \"拿鐵咖啡\", \"id\" : \"99999\"}") }, required = true)
+            @RequestBody Coffee coffee)
     {
         // 將新咖啡添加到列表中
         coffees.add(coffee);
@@ -153,7 +159,11 @@ public class RestApiDemoController
     //         coffee;
     // }
     // ResponseEntity<Coffee> 是返回類型，這是 Spring 框架中的一個類，代表 HTTP 回應。它不僅包含回應主體（Coffee 物件），還包含狀態碼和標頭。
-    ResponseEntity<Coffee> putCoffee(@PathVariable String id, @RequestBody Coffee coffee)
+    ResponseEntity<Coffee> putCoffee(
+            @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true)
+            @PathVariable String id,
+            @Parameter(description = "咖啡的名稱", example = "Cafe Ganador", required = true)
+            @RequestBody Coffee coffee)
     {
         int coffeeIndex = -1;
 
@@ -183,7 +193,9 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
     })
     @DeleteMapping("/coffees/{id}")
-    void deleteCoffee(@PathVariable String id)
+    void deleteCoffee(
+            @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true)
+            @PathVariable String id)
     {
         coffees.removeIf( c -> c.getId().equals(id));
     }
@@ -200,7 +212,9 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
     })
     @GetMapping("/coffees/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
-    Optional<Coffee> getCoffeeByName(@PathVariable String name)     // @PathVariable 從 URL 路徑中提取 id 參數
+    Optional<Coffee> getCoffeeByName(
+            @Parameter(description = "咖啡的名稱", example = "Cafe Lareno", required = true)
+            @PathVariable String name)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
         // 遍歷咖啡列表，查找匹配的 Name
         // 如果找到，返回該咖啡的 Optional；否則返回空的
@@ -229,7 +243,9 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
     @PostMapping("/coffees/batch")
-    List<Coffee> postCoffees(@RequestBody List<Coffee> coffees)
+    List<Coffee> postCoffees(
+            @Parameter(description = "咖啡的名稱", example = "Cafe Lareno", required = true)
+            @RequestBody List<Coffee> coffees)
     {
         // 將新咖啡添加到列表中
         this.coffees.addAll(coffees);
@@ -437,6 +453,5 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 這樣修改後，Swagger UI 會正確顯示這個 API 端點返回的是一個 `Coffee` 對象的陣列/列表，而不是單個 `Coffee` 對象。
 
 ========================================================
-
 
 * */
