@@ -48,13 +48,6 @@ public class RestApiDemoController
     public RestApiDemoController(CoffeeRepository coffeeRepository)
     {
         this.coffeeRepository = coffeeRepository; // 注入咖啡存儲庫
-
-        this.coffeeRepository.saveAll( List.of (
-             new Coffee("Cafe Cereza"),
-             new Coffee("Cafe Ganador"),
-             new Coffee("Cafe Lareno"),
-             new Coffee("Cafe Tres Pontas")
-        ));
     }
 
 
@@ -130,9 +123,9 @@ public class RestApiDemoController
             @Parameter(description = "咖啡的名稱", example = "Cafe Ganador", required = true)
             @RequestBody Coffee coffee)
     {
-        return ( ! coffeeRepository.existsById(id))
-            ? new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.CREATED) // 如果找不到匹配的 ID，則新增一個新的咖啡:
-            : new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.OK);
+        return (coffeeRepository.existsById(id))
+            ? new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.OK)
+            : new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.CREATED);// 如果找不到匹配的 ID，則新增一個新的咖啡:
     }
 
 
