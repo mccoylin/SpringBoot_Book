@@ -1,15 +1,18 @@
-# H2 Database 設定
+# https://ithelp.ithome.com.tw/articles/10309099
+# 在 Spring boot 開發中使用 H2 Database
+
+# H2 Database 設定，H2 是記憶體不能取代正式的 MySQL 等
 spring:
   h2:
     console:
-      enabled: true
-      path: /h2-console/    # 不能取代正式的MYSQL等，雖是記憶體
+      enabled: true  # 設定要啟用 H2 的 console 可以在瀏覽器上面查詢 table
+      path: /h2-console/    # 瀏覽器 console 的 URL 路徑
 
   datasource:
-#    url: jdbc:h2:mem:mydb;   # H2 Database 在 RAM 裡執行. 停止服務就會消失.
+    # url: jdbc:h2:mem:mydb;   # H2 Database 在 RAM 裡執行. 停止服務就會消失.
     url: jdbc:h2:file:./src/main/resources/h2db/mydb2;    # H2 Database 儲存在檔案裡
-    username: root
-    passwd: 1234
+    username: 'root'
+    password: '1234'
 
   jpa:
     hibernate:
