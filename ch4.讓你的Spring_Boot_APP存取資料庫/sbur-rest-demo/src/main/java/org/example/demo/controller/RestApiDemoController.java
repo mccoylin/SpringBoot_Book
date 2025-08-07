@@ -6,6 +6,7 @@ package org.example.demo.controller;
 // https://chikuwacode.github.io/articles/spring-boot-swagger-ui-openapi-documentation/
 // 【Spring Boot】第13課－使用 Swagger UI 製作 API 文件與呼叫介面
 
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +21,12 @@ import io.swagger.v3.oas.annotations.Parameter; // 用於描述方法參數的 S
 import io.swagger.v3.oas.annotations.media.ExampleObject; // 用於提供參數範例的 Swagger 註解
 
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.example.demo.model.Coffee;
+import org.example.demo.repository.CoffeeRepository;
 
 /**
  * REST API 控制器
@@ -32,30 +34,30 @@ import org.example.demo.model.Coffee;
  */
 @Tag(name = "Coffee API", description = "提供咖啡相關的 API") // Swagger 註解，用於生成 API 文檔
 @RestController // 標記這個類別為 REST 控制器，自動將返回值轉換為 JSON 格式
+@RequestMapping("/coffees")
 public class RestApiDemoController
 {
     // 存儲咖啡數據的內存集合
-    private List<Coffee> coffees = new ArrayList<>();
+    private final CoffeeRepository coffeeRepository;
 
 
     /**
-     * 構造函數
-     * 初始化咖啡列表，新增幾個預設的咖啡數據
+     * 建構函數 - 初始化咖啡數據
+     * @param coffeeRepository 咖啡存儲庫，用於數據庫操作
      */
-    public RestApiDemoController()
+    public RestApiDemoController(CoffeeRepository coffeeRepository)
     {
-        // 初始化一些咖啡數據
-        coffees.addAll(List.of(
-                new Coffee("Cafe Cereza"),
-                new Coffee("Cafe Ganador"),
-                new Coffee("Cafe Lareno"),
-                new Coffee("Cafe Tres Pontas")
+        this.coffeeRepository = coffeeRepository; // 注入咖啡存儲庫
+
+        this.coffeeRepository.saveAll( List.of (
+             new Coffee("Cafe Cereza"),
+             new Coffee("Cafe Ganador"),
+             new Coffee("Cafe Lareno"),
+             new Coffee("Cafe Tres Pontas")
         ));
     }
 
 
-    // @RequestMapping(value = "/coffees", method = RequestMethod.GET)
-    // 使用 @GetMapping 簡化 GET 請求的映射
     /**
      * 獲取所有咖啡的端點
      * @return 返回所有咖啡的列表
@@ -65,11 +67,10 @@ public class RestApiDemoController
            @ApiResponse( responseCode = "200", description = "成功獲取所有咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
            @ApiResponse( responseCode = "404", description = "找不到端點")
     })
-    @GetMapping("/coffees")     // 映射 HTTP GET 請求到 /coffees 路徑
+    @GetMapping()     // 映射 HTTP GET 請求到 /coffees 路徑
     Iterable<Coffee> getCoffees()
     {
-        // 選用 Iterable<Coffee> 因為任何可迭代的型別(iterable type) 都能適切地提供所需的功能性。
-        return coffees;     // 返回所有咖啡對象
+        return coffeeRepository.findAll();     // 返回所有咖啡對象
     }
 
 
@@ -82,22 +83,12 @@ public class RestApiDemoController
     @ApiResponses( value = {
             @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
     })
-    @GetMapping("/coffees/{id}")        // 映射 HTTP GET 請求到 /coffees/{id} 路徑，{id} 是路徑變量
+    @GetMapping("/{id}")        // 映射 HTTP GET 請求到 /coffees/{id} 路徑，{id} 是路徑變量
     Optional<Coffee> getCoffeeById(
             @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true) // Swagger 註解，描述此參數
             @PathVariable String id)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
-        // 遍歷咖啡列表，查找匹配的 ID
-        // 如果找到，返回該咖啡的 Optional；否則返回空的
-        for (Coffee coffee : coffees)
-        {
-            if (coffee.getId().equals(id))
-            {
-                return Optional.of(coffee);
-            }
-        }
-
-        return Optional.empty();
+        return coffeeRepository.findById(id); // 根據 ID 查找咖啡對象，返回 Optional<Coffee>
     }
 
 
@@ -111,14 +102,12 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "201", description = "成功新增咖啡", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
-    @PostMapping("/coffees")
+    @PostMapping()
     Coffee postCoffee(
             @Parameter(description = "要新增的咖啡對象", examples = { @ExampleObject( name = "拿鐵咖啡", value = "{\"name\" : \"拿鐵咖啡\", \"id\" : \"99999\"}") }, required = true)
             @RequestBody Coffee coffee)
     {
-        // 將新咖啡添加到列表中
-        coffees.add(coffee);
-        return coffee; // 返回新增的咖啡對象
+        return coffeeRepository.save(coffee); // 將新咖啡添加到列表中
     }
 
 
@@ -134,27 +123,16 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "200", description = "成功更新咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "201", description = "成功新增咖啡，因為找不到匹配的 ID")
     })
-    @PutMapping("/coffees/{id}")
+    @PutMapping("/{id}")
     ResponseEntity<Coffee> putCoffee(
             @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true)
             @PathVariable String id,
             @Parameter(description = "咖啡的名稱", example = "Cafe Ganador", required = true)
             @RequestBody Coffee coffee)
     {
-        int coffeeIndex = -1;
-
-        for(Coffee c: coffees)
-        {
-            if(c.getId().equals(id))
-            {
-                coffeeIndex = coffees.indexOf(c);
-                coffees.set(coffeeIndex, coffee);
-            }
-        }
-
-        return (coffeeIndex == -1) ?
-                new ResponseEntity<>(postCoffee(coffee), HttpStatus.CREATED) :
-                new ResponseEntity<>(coffee, HttpStatus.OK);
+        return ( ! coffeeRepository.existsById(id))
+            ? new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.CREATED) // 如果找不到匹配的 ID，則新增一個新的咖啡:
+            : new ResponseEntity<>(coffeeRepository.save(coffee), HttpStatus.OK);
     }
 
 
@@ -168,12 +146,12 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "204", description = "成功刪除咖啡"),
             @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
     })
-    @DeleteMapping("/coffees/{id}")
+    @DeleteMapping("/{id}")
     void deleteCoffee(
             @Parameter(description = "咖啡的唯一識別碼", example = "1f0cc0fc-f672-4fc1-a062-3dfaa514dcc3", required = true)
             @PathVariable String id)
     {
-        coffees.removeIf( c -> c.getId().equals(id));
+        coffeeRepository.deleteById(id);        // 根據 ID 刪除匹配的咖啡對象
     }
 
 
@@ -187,24 +165,16 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
     })
-    @GetMapping("/coffees/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
+    @GetMapping("/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
     Optional<Coffee> getCoffeeByName(
             @Parameter(description = "咖啡的名稱", example = "Cafe Lareno", required = true)
             @PathVariable String name)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
-        // 遍歷咖啡列表，查找匹配的 Name
-        // 如果找到，返回該咖啡的 Optional；否則返回空的
-
-        for (Coffee coffee : coffees)
-        {
-            if (coffee.getName().equals(name))
-            {
-                return Optional.of(coffee);
-            }
-        }
-
-        return Optional.empty();
+        // 直接呼叫在 Repository 定義好的方法
+        // 查詢工作完全交給資料庫處理，只會返回匹配的一筆資料
+        return coffeeRepository.findByNameIgnoreCase(name);
     }
+
 
     // 傳來的 json 是很多 Coffee 物件的集合
     /**
@@ -218,14 +188,12 @@ public class RestApiDemoController
             @ApiResponse( responseCode = "201", description = "成功新增咖啡組合", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Coffee.class)))),
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
-    @PostMapping("/coffees/batch")
+    @PostMapping("/batch")
     List<Coffee> postCoffees(
             @Parameter(description = "咖啡的名稱", example = "Cafe Lareno", required = true)
             @RequestBody List<Coffee> coffees)
     {
-        // 將新咖啡添加到列表中
-        this.coffees.addAll(coffees);
-        return coffees; // 返回新增的咖啡對象集合
+        return coffeeRepository.saveAll(coffees); // 將新咖啡集合添加到列表中
     }
 
 }
