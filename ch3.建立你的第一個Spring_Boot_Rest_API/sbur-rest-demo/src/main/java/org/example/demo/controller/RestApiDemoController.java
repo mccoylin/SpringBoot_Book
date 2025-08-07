@@ -6,9 +6,16 @@ package org.example.demo.controller;
 // 和書本不同的是，我把程式碼拆開了。不再和書本一樣放在同一個檔案裡。
 // 也把我不懂的寫在結尾處。
 
+// https://chikuwacode.github.io/articles/spring-boot-swagger-ui-openapi-documentation/
+// 【Spring Boot】第13課－使用 Swagger UI 製作 API 文件與呼叫介面
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag; // Swagger 註解，用於生成 API 文檔o
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +27,7 @@ import org.example.demo.model.Coffee;
  * REST API 控制器
  * 負責處理與咖啡相關的 HTTP 請求
  */
+@Tag(name = "Coffee API", description = "提供咖啡相關的 API") // Swagger 註解，用於生成 API 文檔
 @RestController // 標記這個類別為 REST 控制器，自動將返回值轉換為 JSON 格式
 public class RestApiDemoController
 {
@@ -49,6 +57,11 @@ public class RestApiDemoController
      * 獲取所有咖啡的端點
      * @return 返回所有咖啡的列表
      */
+    @Operation(summary = "獲取所有咖啡", description = "返回所有咖啡的列表") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {        // 定義可能的 HTTP 響應狀態碼和描述
+           @ApiResponse( responseCode = "200", description = "成功獲取所有咖啡"),
+           @ApiResponse( responseCode = "404", description = "找不到端點")
+    })
     @GetMapping("/coffees")     // 映射 HTTP GET 請求到 /coffees 路徑
     Iterable<Coffee> getCoffees()
     {
@@ -62,6 +75,10 @@ public class RestApiDemoController
      * @param id 咖啡的唯一識別碼
      * @return 如果找到匹配的咖啡，返回包含該咖啡的 Optional；否則返回空的 Optional
      */
+    @Operation(summary = "根據 ID 獲取特定咖啡", description = "根據咖啡的唯一識別碼返回對應的咖啡對象") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡"),
+    })
     @GetMapping("/coffees/{id}")        // 映射 HTTP GET 請求到 /coffees/{id} 路徑，{id} 是路徑變量
     Optional<Coffee> getCoffeeById(@PathVariable String id)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
@@ -84,6 +101,11 @@ public class RestApiDemoController
      * @param coffee 要新增的咖啡對象
      * @return 返回新增的咖啡對象
      */
+    @Operation(summary = "新增一組咖啡", description = "將新的咖啡對象添加到列表中") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡"),
+            @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
+    })
     @PostMapping("/coffees")
     Coffee postCoffee(@RequestBody Coffee coffee)
     {
@@ -100,6 +122,11 @@ public class RestApiDemoController
      * @param coffee 要更新的咖啡對象
      * @return 返回更新後的咖啡對象或新增的咖啡對象
      */
+    @Operation(summary = "更新一個咖啡", description = "根據 ID 更新咖啡對象，如果不存在則新增") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "200", description = "成功更新咖啡"),
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡，因為找不到匹配的 ID")
+    })
     @PutMapping("/coffees/{id}")
     // Coffee putCoffee(@PathVariable String id, @RequestBody Coffee coffee)
     // {
@@ -146,17 +173,28 @@ public class RestApiDemoController
      * 根據 ID 刪除匹配的咖啡對象
      * @param id 咖啡的唯一識別碼
      */
+    @Operation(summary = "刪除一個咖啡", description = "根據 ID 刪除對應的咖啡對象") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "204", description = "成功刪除咖啡"),
+            @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
+    })
     @DeleteMapping("/coffees/{id}")
     void deleteCoffee(@PathVariable String id)
     {
         coffees.removeIf( c -> c.getId().equals(id));
     }
 
+
     /**
      * 根據名稱獲取特定咖啡的端點
      * @param name 咖啡的名稱
      * @return 如果找到匹配的咖啡，返回包含該咖啡的 Optional；否則返回空的 Optional
      */
+    @Operation(summary = "根據名稱獲取特定咖啡", description = "根據咖啡的名稱返回對應的咖啡對象") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡"),
+            @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
+    })
     @GetMapping("/coffees/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
     Optional<Coffee> getCoffeeByName(@PathVariable String name)     // @PathVariable 從 URL 路徑中提取 id 參數
     {
@@ -181,6 +219,11 @@ public class RestApiDemoController
      * @return 返回新增的咖啡對象集合
      *
      */
+    @Operation(summary = "新增咖啡組合", description = "將新的咖啡 Json 集合添加到列表中") // Swagger 註解，用於生成 API 文檔
+    @ApiResponses( value = {
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡組合"),
+            @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
+    })
     @PostMapping("/coffees/batch")
     List<Coffee> postCoffees(@RequestBody List<Coffee> coffees)
     {
@@ -279,6 +322,73 @@ Coffee coffee = getCoffeeById("some-id")
 4. `@RequestBody Coffee coffee` 表示從 HTTP 請求的內容主體中反序列化一個 Coffee 物件。
 
 這個方法對應於 `@PutMapping("/coffees/{id}")` 端點，允許客戶端透過 PUT 請求更新特定 ID 的咖啡資源。與普通返回 Coffee 物件的方法不同，使用 ResponseEntity 可以更精確地控制 HTTP 回應，包括設置不同的狀態碼（如 201 CREATED 或 200 OK）。
+
+========================================================
+
+該代碼中標注的 `@Tag` 和 `@RestController` 注解是用於 Spring Boot REST API 開發的關鍵部分：
+
+1. `@Tag(name = "Coffee API", description = "提供咖啡相關的 API")` - 這是 Swagger/OpenAPI 的注解，用於在 API 文檔中對控制器進行分類和描述。它將這個控制器標記為「Coffee API」，並提供中文描述「提供咖啡相關的 API」。
+
+2. `@RestController` - 這是 Spring Framework 的核心注解，它結合了 `@Controller` 和 `@ResponseBody` 的功能。它表示：
+   - 該類處理 HTTP 請求
+   - 方法的返回值會自動序列化為 JSON 並寫入 HTTP 響應體
+   - 無需在每個方法上添加 `@ResponseBody` 注解
+
+根據代碼中的錯誤提示，你的項目缺少 Swagger 相關的依賴項。這就是為什麼在多處出現「Cannot resolve symbol 'swagger'」和「Cannot resolve symbol 'Tag'」等錯誤。
+
+你需要在你的 Gradle 或 Maven 配置中添加 SpringDoc OpenAPI 依賴項來解決這些錯誤，例如：
+
+```gradle
+implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
+```
+
+或者對於 Spring Boot 3:
+
+```gradle
+implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+```
+
+添加這些依賴後，這些 Swagger 相關的注解將能夠被正確識別，並且你可以使用 Swagger UI 來查看和測試你的 API。
+
+========================================================
+
+`@Operation` 是 Swagger (OpenAPI) 的註解，用於 REST API 的文檔生成，而 `@PostMapping` 是 Spring Framework 的註解，用於處理 HTTP 請求。這段代碼的具體含義是：
+
+1. `@Operation(summary = "新增咖啡組合", description = "將新的咖啡 Json 集合添加到列表中")`
+   - 這是 Swagger/OpenAPI 的註解
+   - 為 API 提供文檔說明，包括摘要和詳細描述
+   - 當 API 文檔生成時，這些信息會顯示在 Swagger UI 界面上
+   - 摘要設置為「新增咖啡組合」
+   - 詳細描述為「將新的咖啡 Json 集合添加到列表中」
+
+2. `@PostMapping("/coffees/batch")`
+   - 這是 Spring MVC 的註解
+   - 將 HTTP POST 請求映射到特定的處理方法
+   - 當客戶端向 `/coffees/batch` 路徑發送 POST 請求時，會調用被註解的方法
+   - 這個方法用於處理批量添加咖啡的功能
+
+總的來說，這是一個批量新增咖啡資源的 API 端點定義，同時包含了 Swagger 文檔說明以便在 API 文檔中提供更清晰的信息。
+
+========================================================
+
+這段代碼是 Swagger (OpenAPI) 用於 API 文檔生成的註解，專門用來描述 API 可能返回的 HTTP 響應狀態碼和對應的說明：
+
+1. `@ApiResponses` 是一個容器註解，用於包含多個 `@ApiResponse` 註解
+   - `value` 屬性指定了一個 `@ApiResponse` 數組
+
+2. 內部包含兩個 `@ApiResponse` 註解，每個都描述了一種可能的 HTTP 響應：
+   - 第一個 `@ApiResponse` 定義了狀態碼 `200`（成功），並提供中文描述「成功獲取所有咖啡」
+   - 第二個 `@ApiResponse` 定義了狀態碼 `404`（未找到），並提供中文描述「找不到端點」
+
+這些註解的主要目的是在生成的 Swagger UI 文檔中，清晰地展示給 API 使用者這個接口可能返回的 HTTP 狀態碼及其含義，幫助開發人員了解如何正確處理各種響應情況。
+
+在你的代碼中，這些註解應用於 `getCoffees()` 方法，說明該方法在成功時返回 200 狀態碼，在找不到路徑時返回 404 狀態碼。
+
+參數 	      | 說明
+--------------+----------------------
+responseCode  | HTTP 狀態碼。
+description   | 說明狀態碼。
+content 	  | 提供 response body 的結構。
 
 ========================================================
 
