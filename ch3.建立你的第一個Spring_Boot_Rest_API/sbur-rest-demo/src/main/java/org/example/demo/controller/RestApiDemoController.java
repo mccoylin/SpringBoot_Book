@@ -16,6 +16,10 @@ import io.swagger.v3.oas.annotations.tags.Tag; // Swagger 註解，用於生成 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +63,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "獲取所有咖啡", description = "返回所有咖啡的列表") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {        // 定義可能的 HTTP 響應狀態碼和描述
-           @ApiResponse( responseCode = "200", description = "成功獲取所有咖啡"),
+           @ApiResponse( responseCode = "200", description = "成功獲取所有咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
            @ApiResponse( responseCode = "404", description = "找不到端點")
     })
     @GetMapping("/coffees")     // 映射 HTTP GET 請求到 /coffees 路徑
@@ -77,7 +81,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "根據 ID 獲取特定咖啡", description = "根據咖啡的唯一識別碼返回對應的咖啡對象") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡"),
+            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
     })
     @GetMapping("/coffees/{id}")        // 映射 HTTP GET 請求到 /coffees/{id} 路徑，{id} 是路徑變量
     Optional<Coffee> getCoffeeById(@PathVariable String id)     // @PathVariable 從 URL 路徑中提取 id 參數
@@ -103,7 +107,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "新增一組咖啡", description = "將新的咖啡對象添加到列表中") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "201", description = "成功新增咖啡"),
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
     @PostMapping("/coffees")
@@ -124,7 +128,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "更新一個咖啡", description = "根據 ID 更新咖啡對象，如果不存在則新增") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "200", description = "成功更新咖啡"),
+            @ApiResponse( responseCode = "200", description = "成功更新咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "201", description = "成功新增咖啡，因為找不到匹配的 ID")
     })
     @PutMapping("/coffees/{id}")
@@ -192,7 +196,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "根據名稱獲取特定咖啡", description = "根據咖啡的名稱返回對應的咖啡對象") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡"),
+            @ApiResponse( responseCode = "200", description = "成功獲取特定咖啡", content = @Content(schema = @Schema(implementation = Coffee.class))),
             @ApiResponse( responseCode = "404", description = "找不到指定的咖啡")
     })
     @GetMapping("/coffees/name/{name}")     // 不能使用 @GetMapping("/coffees/{name}")，因為 {name} 和先前的 {id} 會分不出來。
@@ -221,7 +225,7 @@ public class RestApiDemoController
      */
     @Operation(summary = "新增咖啡組合", description = "將新的咖啡 Json 集合添加到列表中") // Swagger 註解，用於生成 API 文檔
     @ApiResponses( value = {
-            @ApiResponse( responseCode = "201", description = "成功新增咖啡組合"),
+            @ApiResponse( responseCode = "201", description = "成功新增咖啡組合", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Coffee.class)))),
             @ApiResponse( responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
     })
     @PostMapping("/coffees/batch")
@@ -384,6 +388,8 @@ implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
 在你的代碼中，這些註解應用於 `getCoffees()` 方法，說明該方法在成功時返回 200 狀態碼，在找不到路徑時返回 404 狀態碼。
 
+Swagger/OpenAPI Response 參數說明：
+
 參數 	      | 說明
 --------------+----------------------
 responseCode  | HTTP 狀態碼。
@@ -391,5 +397,46 @@ description   | 說明狀態碼。
 content 	  | 提供 response body 的結構。
 
 ========================================================
+
+這段代碼是 Swagger/OpenAPI 的註解，用於描述 REST API 端點可能返回的 HTTP 響應:
+
+1. 第一個 `@ApiResponse` 註解描述:
+   - `responseCode = "200"`: 表示成功的 HTTP 響應狀態碼
+   - `description = "成功獲取特定咖啡"`: 提供狀態碼的中文說明
+   - `content = @Content(schema = @Schema(implementation = Coffee.class))`: 指定響應內容是 Coffee 類型的對象
+
+2. 第二個 `@ApiResponse` 註解描述:
+   - `responseCode = "404"`: 表示未找到資源的 HTTP 響應狀態碼
+   - `description = "找不到指定的咖啡"`: 提供狀態碼的中文說明
+
+這些註解會在生成的 Swagger UI 文檔中顯示，幫助 API 使用者了解各種可能的響應情況及其含義，使 API 文檔更加完整和專業。
+
+========================================================
+
+你選中的代碼是 Swagger/OpenAPI 註解，用於描述 API 響應。問題是當返回值是 `List<Coffee>` 類型時，註解中的 `schema` 需要調整以正確表示返回的是咖啡列表而非單個咖啡對象。
+
+修改方法是使用 `array` 屬性和 `schema` 來表示這是一個陣列類型，其中的元素是 `Coffee` 類型。以下是修正後的代碼：
+
+```java
+@ApiResponse(
+    responseCode = "201",
+    description = "成功新增咖啡組合",
+    content = @Content(
+        array = @ArraySchema(schema = @Schema(implementation = Coffee.class))
+    )
+),
+@ApiResponse(responseCode = "400", description = "請求錯誤，可能是缺少必要的字段")
+```
+
+你需要先導入 `ArraySchema` 類：
+
+```java
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+```
+
+這樣修改後，Swagger UI 會正確顯示這個 API 端點返回的是一個 `Coffee` 對象的陣列/列表，而不是單個 `Coffee` 對象。
+
+========================================================
+
 
 * */
